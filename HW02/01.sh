@@ -15,7 +15,7 @@ echo "Results will be saved in $log_file"
 > $log_file
 
 for site in "${websites[@]}"; do
-    status_code=$(curl -o /dev/null -s -w "%{http_code}" "$site")
+    status_code=$(curl -o /dev/null -s -w "%{http_code}" -L "$site")
 
     if [[ "$status_code" -eq 200 ]]; then
         result="$site is UP"
