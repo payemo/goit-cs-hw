@@ -9,8 +9,6 @@ WHERE t.status_id = (
 	WHERE s.name = 'new'
 )
 
-select * from tasks;
-
 -- Оновити статус конкретного завдання.
 UPDATE tasks
 SET status_id = (SELECT id FROM status WHERE name = 'in progress')
@@ -48,8 +46,6 @@ FROM tasks AS t
 GROUP BY t.status_id;
 
 -- Отримати завдання, які призначені користувачам з певною доменною частиною електронної пошти.
-select * from tasks;
-
 SELECT t.* FROM tasks AS t
 JOIN users AS u ON 
 	u.id = t.user_id AND
