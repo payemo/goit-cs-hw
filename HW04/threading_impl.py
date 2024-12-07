@@ -3,15 +3,24 @@ from pathlib import Path
 from collections import defaultdict
 import time
 
+from utils import boyer_moore_search
+
+BUFFER_SIZE = 1024 * 1024 # 1MB buffer
+
 def search_keywords_in_files(file_paths, keywords, result_dict, lock):
     for file_path in file_paths:
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                for keyword in keywords:
-                    if keyword in content:
-                        with lock:
-                            result_dict[keyword].append(str(file_path))
+                while True:
+                    content = file.read(BUFFER_SIZE)
+                    if not content:
+                        break
+
+                    for keyword in keywords:
+                        if boyer_moore_search(content, keyword):
+                            with lock:
+                                result_dict[keyword].append(str(file_path))
+                            break # No need to check other keywords for this file
         except Exception as ex:
             print(f"Error reading file {file_path}: {ex}")
 
@@ -21,12 +30,13 @@ def main_threading(file_paths, keywords):
     results = defaultdict(list)
     lock = threading.Lock()
 
-    chunk_size = num_threads
+    # Split file evenly
+    chunk_size = (len(file_paths) + num_threads - 1) // num_threads
 
     start_time = time.time()
     for i in range(num_threads):
         start = i * chunk_size
-        end = None if i == num_threads - 1 else (i + 1) * chunk_size
+        end = (i + 1) * chunk_size if (i + 1) * chunk_size < len(file_paths) else len(file_paths)
         thread = threading.Thread(target=search_keywords_in_files,
                                   args=(file_paths[start:end], keywords, results, lock))
         threads.append(thread)
